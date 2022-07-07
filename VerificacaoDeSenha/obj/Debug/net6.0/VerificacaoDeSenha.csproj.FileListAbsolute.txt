@@ -33,3 +33,6 @@ C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\obj\Debug\net6
 C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\obj\Debug\net6.0\VerificacaoDeSenha.pdb
 C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\obj\Debug\net6.0\VerificacaoDeSenha.genruntimeconfig.cache
 C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\obj\Debug\net6.0\ref\VerificacaoDeSenha.dll
+C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\bin\Debug\net6.0\MailKit.dll
+C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\bin\Debug\net6.0\MimeKit.dll
+C:\Users\alexa\source\repos\VerificacaoDeSenha\VerificacaoDeSenha\bin\Debug\net6.0\BouncyCastle.Crypto.dll

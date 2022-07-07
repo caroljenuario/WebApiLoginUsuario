@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
+using MimeKit;
+using MimeKit.Text;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 
 namespace VerificacaoDeSenha.Controllers
 {
@@ -16,12 +20,13 @@ namespace VerificacaoDeSenha.Controllers
 
         [HttpPost("registrar")]
 
-        public async Task <IActionResult> Registrar(UserRegister request)
+        public async Task<IActionResult> Registrar(UserRegister request)
         {
             if (_context.Users.Any(u => u.email == request.Email))
             {
                 return BadRequest("Usuario já existe");
             }
+
             CriarSenhaHash(request.SenhaForte,
             out byte[] senhaHash,
             out byte[] senha);
@@ -32,7 +37,21 @@ namespace VerificacaoDeSenha.Controllers
                 senhaHash = senhaHash,
                 senha = senha,
                 verificaToken = CriarTokenAleatorio()
+
             };
+
+            var email = new MimeMessage();
+            email.From.Add(MailboxAddress.Parse(request.Email));
+            email.To.Add(MailboxAddress.Parse(request.Email));
+            email.Subject = ("Token de acesso.");
+            email.Body = new TextPart(TextFormat.Html) {Text = user.verificaToken};
+
+            using var smtp = new SmtpClient();
+            smtp.Connect("smtp.ethereal.email", 587, SecureSocketOptions.StartTls);
+            smtp.Authenticate(request.Email, request.SenhaForte);
+            smtp.Send(email);
+            smtp.Disconnect(true);
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -64,6 +83,7 @@ namespace VerificacaoDeSenha.Controllers
         [HttpPost("verificar")]
         public async Task<IActionResult> Verificar(string token)
         {
+           
             var user = await _context.Users.FirstOrDefaultAsync(u => u.verificaToken == token);
             if (user == null)
             {
@@ -115,28 +135,25 @@ namespace VerificacaoDeSenha.Controllers
         }
 
 
-        private bool VerificarHashSenha(string senhaForte, byte[] senhaHash, byte[] senha)
+        private static bool VerificarHashSenha(string senhaForte, byte[] senhaHash, byte[] senha)
         {
-            using (var hmac = new HMACSHA512(senha))
+            using (HMACSHA512? hmac = new HMACSHA512(senha))
             {
                 var computedHash = hmac
                     .ComputeHash(System.Text.Encoding.UTF8.GetBytes(senhaForte));
                 return computedHash.SequenceEqual(senhaHash);
             }
         }
-
-
-        private void CriarSenhaHash(string SenhaForte, out byte[] senhaHash, out byte[] senha)
+     
+        private static void CriarSenhaHash(string SenhaForte, out byte[] senhaHash, out byte[] senha)
         {
-            using (var hmac = new HMACSHA512())
-            {
-                senha = hmac.Key;
-                senhaHash = hmac
-                    .ComputeHash(System.Text.Encoding.UTF8.GetBytes(SenhaForte));
-            }
+            using var hmac = new HMACSHA512();
+            senha = hmac.Key;
+            senhaHash = hmac
+                .ComputeHash(System.Text.Encoding.UTF8.GetBytes(SenhaForte));
         }
 
-        private string CriarTokenAleatorio()
+        private static string CriarTokenAleatorio()
         {
             return Convert.ToHexString(RandomNumberGenerator.GetBytes(8));
         }
